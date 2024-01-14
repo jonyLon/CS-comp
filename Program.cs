@@ -23,7 +23,9 @@
         public string? Memory { get; private set; }
         public int MemSize { get; private set; }
 
-        public Disk(string? memory, int memSize)
+
+        public Disk() { }
+        public Disk(string memory, int memSize)
         {
             Memory = memory;
             MemSize = memSize;
@@ -34,12 +36,12 @@
             return "disk";
         }
 
-        public string Read()
+        public virtual string Read()
         {
-            return "Reading...";
+            return Memory + " reading..." ;
         }
 
-        public void Write(string text)
+        public virtual void Write(string text)
         {
             Console.WriteLine($"{text} - has been writen to {GetName()}.");
         }
@@ -49,7 +51,7 @@
     {
         protected bool hasDisk = false;
 
-        public CD(string? memory, int memSize) : base(memory, memSize)
+        public CD(int memSize) : base("CD", memSize)
         {
         }
 
@@ -57,22 +59,16 @@
 
         public void Insert()
         {
-            if (HasDisk)
-            {
-                Reject();
-                return;
-            }
-            Console.WriteLine("CD inserted");
-            hasDisk = true;
+            Console.WriteLine($"{Memory} inserted");
         }
 
         public void Reject()
         {
-            Console.WriteLine("CD insertion rejected");
+            Console.WriteLine($"{Memory} insertion rejected");
         }
         public override string GetName()
         {
-            return "CD " + base.GetName();
+            return $"{Memory} " + base.GetName();
         }
     }
 
@@ -80,29 +76,23 @@
     {
         protected bool hasDisk = false;
 
-        public Flash(string? memory, int memSize) : base(memory, memSize)
+        public Flash(int memSize) : base("Flash", memSize)
         {
         }
         public bool HasDisk => hasDisk;
 
         public void Insert()
         {
-            if (HasDisk)
-            {
-                Reject();
-                return;
-            }
-            Console.WriteLine("Flash inserted");
-            hasDisk = true;
+            Console.WriteLine($"{Memory} inserted");
         }
 
         public void Reject()
         {
-            Console.WriteLine("Flash insertion rejected");
+            Console.WriteLine($"{Memory} insertion rejected");
         }
         public override string GetName()
         {
-            return "Flash " + base.GetName();
+            return $"{Memory} " + base.GetName();
         }
     }
 
@@ -110,40 +100,34 @@
     {
         protected bool hasDisk = false;
 
-        public DVD(string? memory, int memSize) : base(memory, memSize)
+        public DVD( int memSize) : base("DVD", memSize)
         {
         }
         public bool HasDisk => hasDisk;
 
         public void Insert()
         {
-            if (HasDisk)
-            {
-                Reject();
-                return;
-            }
-            Console.WriteLine("DVD inserted");
-            hasDisk = true;
+            Console.WriteLine($"{Memory} inserted");
         }
 
         public void Reject()
         {
-            Console.WriteLine("DVD insertion rejected");
+            Console.WriteLine($"{Memory} insertion rejected");
         }
         public override string GetName()
         {
-            return "DVD " + base.GetName();
+            return $"{Memory} " + base.GetName();
         }
     }
 
     class HDD : Disk
     {
-        public HDD(string? memory, int memSize) : base(memory, memSize)
+        public HDD(int memSize) : base("HDD", memSize)
         {
         }
         public override string GetName()
         {
-            return "HDD " + base.GetName();
+            return $"{Memory} " + base.GetName();
         }
     }
 
@@ -173,14 +157,141 @@
         }
     }
 
-    
+    class Comp
+    {
+        public int CountDisk { get; private set; }
+        public int CountPrintDevice { get; private set; }
+
+        public Disk[] disks { get; private set; }
+        public IPrintInformation[] printDevice { get; set; }
+
+        public Comp(int d, int pd) {
+            CountDisk = d;
+            CountPrintDevice = pd;
+            disks = new Disk[d];
+            printDevice = new IPrintInformation[pd];
+        }
+        public void AddDevice(int index, IPrintInformation si) {
+            if (index >= 0 && index < printDevice.Length) {
+                printDevice[index] = si;
+            }
+            else { throw new IndexOutOfRangeException(); }
+        }
+        public void AddDisk(int index, Disk d)
+        {
+            if (index >= 0 && index < disks.Length)
+            {
+                disks[index] = d;
+            }
+            else { throw new IndexOutOfRangeException(); }
+        }
+
+        public bool checkDisk(string device)
+        {
+            return Array.Exists(disks, x => x.Memory == device);
+        }
+        public void InsertReject(string device, bool b)
+        {
+            if (checkDisk(device))
+            {
+                Disk[] set = Array.FindAll(disks, x => x.Memory == device);
+
+                foreach (Disk disk in set)
+                {
+                    if (disk is IRemovableDisk)
+                    {
+                        if (b)
+                        {
+                            (disk as IRemovableDisk).Insert();
+                        }
+                        else (disk as IRemovableDisk).Reject();
+                    }
+                    else Console.WriteLine(disk.GetName() + " are not removable");
+                }
+            } else Console.WriteLine(device + " not found");
+        }
+
+        public void PrintInfo(string text, string device)
+        {
+            var dev = Array.Find(printDevice, x => x.GetName() == device);
+            if (dev == null)
+            {
+                Console.WriteLine(device + " not found");
+                return;
+            }
+            dev.Print(text);
+        }
+
+        public void ReadInfo(string device)
+        {
+            var dev = Array.Find(disks, x => x.Memory == device);
+            if (dev == null)
+            {
+                Console.WriteLine(device + " not found");
+                return;
+            }
+            Console.WriteLine(dev.Read());
+        }
+
+        public void ShowDick() 
+        {
+            Console.WriteLine("Disks: \n");
+            foreach (var item in disks)
+            {
+                Console.WriteLine(item.GetName());
+                Console.WriteLine();
+            }
+        }
+        public void ShowPrintDevice()
+        {
+            Console.WriteLine("Print devices: \n");
+            foreach (var item in printDevice)
+            {
+                Console.WriteLine(item.GetName());
+                Console.WriteLine();
+            }
+        }
+        public void WriteInfo(string text, string device)
+        {
+            var dev = Array.Find(disks, x => x.Memory == device);
+            if (dev == null)
+            {
+                Console.WriteLine(device + " not found");
+                return;
+            }
+            dev.Write(text);
+        }
+    }
 
     internal class Program
     {
 
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Comp comp = new Comp(5,2);
+            CD cd = new CD(50);
+            Flash flash = new Flash(300);
+            HDD hDD = new HDD(6000);
+            DVD dVD = new DVD(60);
+            comp.AddDevice(0, new Printer());
+            comp.AddDevice(1, new Monitor());
+            comp.AddDisk(0, cd);
+            comp.AddDisk(1, flash);
+            comp.AddDisk(2, new Flash(450));
+            comp.AddDisk(3, hDD);
+            comp.AddDisk(4, dVD);
+            comp.ShowDick();
+            comp.ShowPrintDevice();
+
+            Console.WriteLine(comp.checkDisk("HDD"));
+            comp.InsertReject("HDD", true);
+            comp.InsertReject("CD", true);
+            comp.PrintInfo("Hello world","Monitor");
+            comp.PrintInfo("Hello world", "nitor");
+            comp.ReadInfo("HDD");
+            comp.ReadInfo("DVD");
+            comp.WriteInfo("Some sample info...", "HDD");
+            comp.WriteInfo("Some sample info...", "Flash");
         }
     }
 }
